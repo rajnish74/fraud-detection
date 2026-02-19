@@ -19,7 +19,7 @@ public class GraphController {
                 (result != null ? result.getAccounts().size() : 0) + " accounts");
     }
 
-    @PostMapping("/data")
+    @GetMapping("/data")
     public ResponseEntity<Map<String, Object>> getGraphData() {
         if (latestResult == null) {
             return ResponseEntity.notFound().build();
