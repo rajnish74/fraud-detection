@@ -236,6 +236,52 @@
             font-weight: bold;
         }
 
+        /* ===== ACTION BUTTONS ===== */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,210,255,0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid #00d2ff;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0,210,255,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,210,255,0.3);
+        }
+
         /* ===== HEATMAP ===== */
         .heatmap-section {
             background: rgba(255,255,255,0.05);
@@ -715,6 +761,16 @@
                 grid-template-columns: 100px 1fr 100px 80px;
                 font-size: 0.9em;
             }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 
@@ -725,7 +781,7 @@
     <!-- Header -->
     <header>
         <div class="live-badge" id="liveStatus">🟡 CONNECTING...</div>
-        <h1> ULTIMATE AI-Powered Money Muling Detection Engine</h1>
+        <h1>🏆 ULTIMATE AI-Powered Money Muling Detection Engine</h1>
         <p class="subtitle">Next-Gen Financial Crime Detection with Ensemble Learning | RIFT 2026</p>
         <div class="badges">
             <span class="badge">ML Ensemble v3.0</span>
@@ -783,6 +839,16 @@
             </div>
         </div>
 
+        <!-- ACTION BUTTONS - JSON DOWNLOAD -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" id="downloadJson">
+                📥 Download JSON Report
+            </button>
+            <button class="btn btn-secondary" id="exportGraph">
+                🖼️ Export Graph as PNG
+            </button>
+        </div>
+
         <!-- Heatmap -->
         <div class="heatmap-section">
             <h3>🔥 Live Transaction Risk Heatmap (24h)</h3>
@@ -831,7 +897,7 @@
             </table>
         </div>
 
-        <!-- XAI PANEL - NEW SECTION -->
+        <!-- XAI PANEL -->
         <div class="xai-panel">
             <h3>🔍 Why Is This Account Suspicious?</h3>
 
@@ -902,6 +968,18 @@
         initializeEventListeners();
         checkServerHealth();
         generateQRCode();
+
+        // Add download button listener
+        const downloadBtn = document.getElementById('downloadJson');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', downloadJSON);
+        }
+
+        // Add export graph button listener
+        const exportBtn = document.getElementById('exportGraph');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportGraphAsPNG);
+        }
     });
 
     // ===== 2. EVENT LISTENERS =====
@@ -1247,10 +1325,10 @@
         tbody.innerHTML = '';
 
         const rings = data.fraud_rings || [
-            {ring_id: 'RING_001', pattern_type: 'cycle', member_accounts: [1,2,3], risk_score: 94},
-            {ring_id: 'RING_002', pattern_type: 'cycle', member_accounts: [1,2,3], risk_score: 92},
-            {ring_id: 'RING_003', pattern_type: 'layered', member_accounts: [1,2,3,4], risk_score: 87},
-            {ring_id: 'RING_004', pattern_type: 'smurfing', member_accounts: [1,2,3,4,5], risk_score: 84}
+            {ring_id: 'RING_001', pattern_type: 'cycle', member_accounts: ['ACC_101', 'ACC_102', 'ACC_103'], risk_score: 94},
+            {ring_id: 'RING_002', pattern_type: 'cycle', member_accounts: ['ACC_201', 'ACC_202', 'ACC_203'], risk_score: 92},
+            {ring_id: 'RING_003', pattern_type: 'layered', member_accounts: ['ACC_301', 'ACC_302', 'ACC_303', 'ACC_304'], risk_score: 87},
+            {ring_id: 'RING_004', pattern_type: 'smurfing', member_accounts: ['ACC_401', 'ACC_402', 'ACC_403', 'ACC_404', 'ACC_405'], risk_score: 84}
         ];
 
         rings.forEach(ring => {
@@ -1281,199 +1359,198 @@
     }
 
     // ===== 12. XAI FUNCTIONS =====
-    // ===== 12. XAI FUNCTIONS =====
-// ===== 12. XAI FUNCTIONS =====
-function explainRisk() {
-    if (!currentResult) {
-        alert('Please upload a file first');
-        return;
-    }
+    function explainRisk() {
+        if (!currentResult) {
+            alert('Please upload a file first');
+            return;
+        }
 
-    const accountId = document.getElementById('explainAccount').value;
-    if (!accountId) {
-        alert('Please select an account');
-        return;
-    }
+        const accountId = document.getElementById('explainAccount').value;
+        if (!accountId) {
+            alert('Please select an account');
+            return;
+        }
 
-    const resultDiv = document.getElementById('explanationResult');
+        const resultDiv = document.getElementById('explanationResult');
 
-    // Get account data
-    const account = currentResult.accounts[accountId];
-    if (!account) return;
+        // Get account data
+        const account = currentResult.accounts[accountId];
+        if (!account) return;
 
-    // Find ring
-    const accountRing = Object.values(currentResult.rings || {}).find(ring =>
-        ring.memberAccounts && ring.memberAccounts.includes(accountId)
-    );
+        // Find ring
+        const accountRing = Object.values(currentResult.rings || {}).find(ring =>
+            ring.memberAccounts && ring.memberAccounts.includes(accountId)
+        );
 
-    // Build factors
-    const factors = [];
+        // Build factors
+        const factors = [];
 
-    // Pattern-based factors
-    if (account.patterns && account.patterns.length > 0) {
-        account.patterns.forEach(pattern => {
-            if (pattern.includes('cycle')) {
-                factors.push({
-                    name: '🔄 Circular Money Flow',
-                    weight: 40,
-                    detail: `Part of ${accountRing?.patternType || 'cycle'} ring with ${accountRing?.memberAccounts?.length || 0} accounts`
-                });
-            }
-            else if (pattern.includes('layered')) {
-                factors.push({
-                    name: '🔗 Layered Network',
-                    weight: 35,
-                    detail: `Money passes through multiple accounts in chain`
-                });
-            }
-            else if (pattern.includes('fan')) {
-                factors.push({
-                    name: '📥 Smurfing Pattern',
-                    weight: 45,
-                    detail: `${account.outgoingCount || 0} outgoing transactions to different accounts`
-                });
-            }
-        });
-    }
-
-    // Transaction factors
-    if (account.incomingCount > 0 && account.outgoingCount > 0) {
-        const ratio = account.incomingCount / account.outgoingCount;
-        if (ratio > 2 || ratio < 0.5) {
-            factors.push({
-                name: '⚖️ Unbalanced Flow',
-                weight: 25,
-                detail: `Incoming/Outgoing ratio: ${ratio.toFixed(2)}`
+        // Pattern-based factors
+        if (account.patterns && account.patterns.length > 0) {
+            account.patterns.forEach(pattern => {
+                if (pattern.includes('cycle')) {
+                    factors.push({
+                        name: '🔄 Circular Money Flow',
+                        weight: 40,
+                        detail: `Part of ${accountRing?.patternType || 'cycle'} ring with ${accountRing?.memberAccounts?.length || 0} accounts`
+                    });
+                }
+                else if (pattern.includes('layered')) {
+                    factors.push({
+                        name: '🔗 Layered Network',
+                        weight: 35,
+                        detail: `Money passes through multiple accounts in chain`
+                    });
+                }
+                else if (pattern.includes('fan')) {
+                    factors.push({
+                        name: '📥 Smurfing Pattern',
+                        weight: 45,
+                        detail: `${account.outgoingCount || 0} outgoing transactions to different accounts`
+                    });
+                }
             });
         }
-    }
 
-    // Amount factors
-    if (account.totalReceived > 0 && account.totalSent > 0) {
-        const amountRatio = account.totalReceived / account.totalSent;
-        if (amountRatio > 3 || amountRatio < 0.33) {
+        // Transaction factors
+        if (account.incomingCount > 0 && account.outgoingCount > 0) {
+            const ratio = account.incomingCount / account.outgoingCount;
+            if (ratio > 2 || ratio < 0.5) {
+                factors.push({
+                    name: '⚖️ Unbalanced Flow',
+                    weight: 25,
+                    detail: `Incoming/Outgoing ratio: ${ratio.toFixed(2)}`
+                });
+            }
+        }
+
+        // Amount factors
+        if (account.totalReceived > 0 && account.totalSent > 0) {
+            const amountRatio = account.totalReceived / account.totalSent;
+            if (amountRatio > 3 || amountRatio < 0.33) {
+                factors.push({
+                    name: '💰 Amount Discrepancy',
+                    weight: 20,
+                    detail: `Received $${account.totalReceived}, Sent $${account.totalSent}`
+                });
+            }
+        }
+
+        // If no factors, add default
+        if (factors.length === 0) {
             factors.push({
-                name: '💰 Amount Discrepancy',
-                weight: 20,
-                detail: `Received $${account.totalReceived}, Sent $${account.totalSent}`
+                name: '📊 ML Model Detection',
+                weight: 100,
+                detail: 'Account flagged by ensemble learning model'
             });
         }
-    }
 
-    // If no factors, add default
-    if (factors.length === 0) {
-        factors.push({
-            name: '📊 ML Model Detection',
-            weight: 100,
-            detail: 'Account flagged by ensemble learning model'
-        });
-    }
+        // Normalize weights to sum to 100
+        const totalWeight = factors.reduce((sum, f) => sum + f.weight, 0);
+        factors.forEach(f => f.weight = ((f.weight / totalWeight) * 100).toFixed(1));
 
-    // Normalize weights to sum to 100
-    const totalWeight = factors.reduce((sum, f) => sum + f.weight, 0);
-    factors.forEach(f => f.weight = ((f.weight / totalWeight) * 100).toFixed(1));
+        // Calculate model confidence (between 85-98%)
+        const modelConfidence = (85 + Math.random() * 13).toFixed(1);
 
-    // Calculate model confidence (between 85-98%)
-    const modelConfidence = (85 + Math.random() * 13).toFixed(1);
+        // ===== DYNAMIC AGREEMENT RULES =====
+        let modelAgreement = '';
+        let agreementColor = '';
 
-    // ===== DYNAMIC AGREEMENT RULES =====
-    let modelAgreement = '';
-    let agreementColor = '';
-
-    if (modelConfidence >= 90) {
-        modelAgreement = 'Strong Agreement';
-        agreementColor = '#44aa44'; // Green
-    } else if (modelConfidence >= 70) {
-        modelAgreement = 'Moderate Agreement';
-        agreementColor = '#ffaa00'; // Orange
-    } else {
-        modelAgreement = 'Weak Agreement';
-        agreementColor = '#ff4444'; // Red
-    }
-
-    // Create summary line based on patterns
-    let summaryLine = '';
-    if (account.patterns && account.patterns.length > 0) {
-        if (account.patterns.some(p => p.includes('cycle'))) {
-            summaryLine = `Account ${accountId} is flagged due to participation in a high-risk circular transaction ring and multi-layered fund transfers.`;
-        } else if (account.patterns.some(p => p.includes('layered'))) {
-            summaryLine = `Account ${accountId} shows suspicious layered transaction patterns with multiple intermediate accounts.`;
-        } else if (account.patterns.some(p => p.includes('fan'))) {
-            summaryLine = `Account ${accountId} exhibits smurfing behavior with multiple small transactions to/from various accounts.`;
+        if (modelConfidence >= 90) {
+            modelAgreement = 'Strong Agreement';
+            agreementColor = '#44aa44'; // Green
+        } else if (modelConfidence >= 70) {
+            modelAgreement = 'Moderate Agreement';
+            agreementColor = '#ffaa00'; // Orange
         } else {
-            summaryLine = `Account ${accountId} is flagged due to anomalous transaction patterns detected by ensemble ML models.`;
+            modelAgreement = 'Weak Agreement';
+            agreementColor = '#ff4444'; // Red
         }
-    } else {
-        summaryLine = `Account ${accountId} shows unusual activity patterns consistent with money muling behavior.`;
-    }
 
-    // Build HTML
-    let html = `
-        <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #333;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="color: #00d2ff; font-size: 1.4em; font-weight: bold;">${accountId}</span>
-                <span style="background: ${account.suspicionScore > 80 ? '#ff4444' : '#ff8800'}; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
-                    ${account.suspicionScore?.toFixed(1) || '0'}% Risk
-                </span>
-            </div>
+        // Create summary line based on patterns
+        let summaryLine = '';
+        if (account.patterns && account.patterns.length > 0) {
+            if (account.patterns.some(p => p.includes('cycle'))) {
+                summaryLine = `Account ${accountId} is flagged due to participation in a high-risk circular transaction ring and multi-layered fund transfers.`;
+            } else if (account.patterns.some(p => p.includes('layered'))) {
+                summaryLine = `Account ${accountId} shows suspicious layered transaction patterns with multiple intermediate accounts.`;
+            } else if (account.patterns.some(p => p.includes('fan'))) {
+                summaryLine = `Account ${accountId} exhibits smurfing behavior with multiple small transactions to/from various accounts.`;
+            } else {
+                summaryLine = `Account ${accountId} is flagged due to anomalous transaction patterns detected by ensemble ML models.`;
+            }
+        } else {
+            summaryLine = `Account ${accountId} shows unusual activity patterns consistent with money muling behavior.`;
+        }
 
-            <!-- Model Confidence Line with Dynamic Agreement -->
-            <div style="background: rgba(0,210,255,0.1); padding: 12px; border-radius: 8px; margin: 10px 0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: #00d2ff; font-weight: bold;">🤖 Model Confidence:</span>
-                    <span style="font-weight: bold; color: ${modelConfidence > 90 ? '#44aa44' : modelConfidence > 85 ? '#ffaa00' : '#ff4444'}">
-                        ${modelConfidence}%
+        // Build HTML
+        let html = `
+            <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #333;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="color: #00d2ff; font-size: 1.4em; font-weight: bold;">${accountId}</span>
+                    <span style="background: ${account.suspicionScore > 80 ? '#ff4444' : '#ff8800'}; padding: 5px 15px; border-radius: 20px; font-weight: bold;">
+                        ${account.suspicionScore?.toFixed(1) || '0'}% Risk
                     </span>
                 </div>
-                <div style="height: 6px; background: #333; border-radius: 3px; margin: 8px 0; overflow: hidden;">
-                    <div style="width: ${modelConfidence}%; height: 100%; background: ${modelConfidence > 90 ? '#44aa44' : modelConfidence > 85 ? '#ffaa00' : '#ff4444'};"></div>
+
+                <!-- Model Confidence Line with Dynamic Agreement -->
+                <div style="background: rgba(0,210,255,0.1); padding: 12px; border-radius: 8px; margin: 10px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #00d2ff; font-weight: bold;">🤖 Model Confidence:</span>
+                        <span style="font-weight: bold; color: ${modelConfidence > 90 ? '#44aa44' : modelConfidence > 85 ? '#ffaa00' : '#ff4444'}">
+                            ${modelConfidence}%
+                        </span>
+                    </div>
+                    <div style="height: 6px; background: #333; border-radius: 3px; margin: 8px 0; overflow: hidden;">
+                        <div style="width: ${modelConfidence}%; height: 100%; background: ${modelConfidence > 90 ? '#44aa44' : modelConfidence > 85 ? '#ffaa00' : '#ff4444'};"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #888; font-size: 0.9em;">
+                        <span style="color: ${agreementColor}; font-weight: bold;">🤝 ${modelAgreement}</span>
+                        <span>⚡ Ensemble Vote: ${Math.round(modelConfidence - 5)}-${Math.round(modelConfidence + 3)}%</span>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; color: #888; font-size: 0.9em;">
-                    <span style="color: ${agreementColor}; font-weight: bold;">🤝 ${modelAgreement}</span>
-                    <span>⚡ Ensemble Vote: ${Math.round(modelConfidence - 5)}-${Math.round(modelConfidence + 3)}%</span>
-                </div>
+
+                ${account.patterns && account.patterns.length > 0 ?
+                    `<div style="margin-top: 10px; color: #888;">Detected Patterns: ${account.patterns.join(', ')}</div>` : ''}
             </div>
 
-            ${account.patterns && account.patterns.length > 0 ?
-                `<div style="margin-top: 10px; color: #888;">Detected Patterns: ${account.patterns.join(', ')}</div>` : ''}
-        </div>
-
-        <!-- One Line Explanation Summary -->
-        <div style="background: linear-gradient(135deg, rgba(0,210,255,0.2), rgba(58,123,213,0.2)); padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 3px solid #00d2ff;">
-            <p style="font-style: italic; color: #fff; margin: 0;">"${summaryLine}"</p>
-        </div>
-    `;
-
-    factors.forEach(f => {
-        html += `
-            <div class="factor-item">
-                <div class="factor-header">
-                    <span class="factor-name">${f.name}</span>
-                    <span class="factor-weight">${f.weight}%</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: ${f.weight}%;"></div>
-                </div>
-                <div class="factor-detail">${f.detail}</div>
+            <!-- One Line Explanation Summary -->
+            <div style="background: linear-gradient(135deg, rgba(0,210,255,0.2), rgba(58,123,213,0.2)); padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 3px solid #00d2ff;">
+                <p style="font-style: italic; color: #fff; margin: 0;">"${summaryLine}"</p>
             </div>
         `;
-    });
 
-    // Ring info
-    if (accountRing) {
-        html += `
-            <div class="ring-info">
-                <div class="ring-info-title">🔍 Ring Details</div>
-                <div>Ring ID: ${accountRing.ringId}</div>
-                <div>Pattern: ${accountRing.patternType}</div>
-                <div>Members: ${accountRing.memberAccounts?.join(', ') || 'N/A'}</div>
-                <div>Ring Risk: ${accountRing.riskScore?.toFixed(1) || '0'}%</div>
-            </div>
-        `;
+        factors.forEach(f => {
+            html += `
+                <div class="factor-item">
+                    <div class="factor-header">
+                        <span class="factor-name">${f.name}</span>
+                        <span class="factor-weight">${f.weight}%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: ${f.weight}%;"></div>
+                    </div>
+                    <div class="factor-detail">${f.detail}</div>
+                </div>
+            `;
+        });
+
+        // Ring info
+        if (accountRing) {
+            html += `
+                <div class="ring-info">
+                    <div class="ring-info-title">🔍 Ring Details</div>
+                    <div>Ring ID: ${accountRing.ringId}</div>
+                    <div>Pattern: ${accountRing.patternType}</div>
+                    <div>Members: ${accountRing.memberAccounts?.join(', ') || 'N/A'}</div>
+                    <div>Ring Risk: ${accountRing.riskScore?.toFixed(1) || '0'}%</div>
+                </div>
+            `;
+        }
+
+        resultDiv.innerHTML = html;
     }
 
-    resultDiv.innerHTML = html;
-}
     // Update Account Select
     function updateAccountSelect() {
         const select = document.getElementById('explainAccount');
@@ -1765,7 +1842,8 @@ function explainRisk() {
                 suspicious_accounts_flagged: 15,
                 fraud_rings_detected: 10,
                 ensemble_accuracy: 96.2,
-                ensemble_confidence: 94.8
+                ensemble_confidence: 94.8,
+                processing_time_seconds: 0.006
             },
             ml_scores: {
                 isolationForest: 87.66,
@@ -1774,10 +1852,10 @@ function explainRisk() {
                 ensemble: 96.2
             },
             accounts: {
-                'ACC_101': { accountId: 'ACC_101', suspicionScore: 94, patterns: ['cycle_length_3', 'high_velocity'], incomingCount: 3, outgoingCount: 3, totalReceived: 5000, totalSent: 4500 },
-                'ACC_102': { accountId: 'ACC_102', suspicionScore: 92, patterns: ['cycle_length_3'], incomingCount: 2, outgoingCount: 2, totalReceived: 3000, totalSent: 3500 },
-                'ACC_103': { accountId: 'ACC_103', suspicionScore: 87, patterns: ['layered_network'], incomingCount: 2, outgoingCount: 1, totalReceived: 2500, totalSent: 1500 },
-                'ACC_201': { accountId: 'ACC_201', suspicionScore: 84, patterns: ['fan_out_disperser'], incomingCount: 1, outgoingCount: 5, totalReceived: 500, totalSent: 2500 }
+                'ACC_101': { accountId: 'ACC_101', suspicionScore: 94, patterns: ['cycle_length_3', 'high_velocity'], incomingCount: 3, outgoingCount: 3, totalReceived: 5000, totalSent: 4500, ringId: 'RING_001' },
+                'ACC_102': { accountId: 'ACC_102', suspicionScore: 92, patterns: ['cycle_length_3'], incomingCount: 2, outgoingCount: 2, totalReceived: 3000, totalSent: 3500, ringId: 'RING_001' },
+                'ACC_103': { accountId: 'ACC_103', suspicionScore: 87, patterns: ['layered_network'], incomingCount: 2, outgoingCount: 1, totalReceived: 2500, totalSent: 1500, ringId: 'RING_003' },
+                'ACC_201': { accountId: 'ACC_201', suspicionScore: 84, patterns: ['fan_out_disperser'], incomingCount: 1, outgoingCount: 5, totalReceived: 500, totalSent: 2500, ringId: 'RING_004' }
             },
             rings: {
                 'RING_001': { ringId: 'RING_001', patternType: 'cycle', memberAccounts: ['ACC_101', 'ACC_102', 'ACC_103'], riskScore: 94 },
@@ -1801,6 +1879,88 @@ function explainRisk() {
 
     // ===== 21. AUTO GENERATE QR =====
     setInterval(generateQRCode, 30000);
+
+    // ===== 22. JSON DOWNLOAD FUNCTION =====
+    function downloadJSON() {
+        if (!currentResult) {
+            alert('Please upload a file first');
+            return;
+        }
+
+        // Build JSON in EXACT required format
+        const jsonOutput = {
+            suspicious_accounts: [],
+            fraud_rings: [],
+            summary: {
+                total_accounts_analyzed: currentResult.summary?.total_accounts_analyzed || 0,
+                suspicious_accounts_flagged: currentResult.summary?.suspicious_accounts_flagged || 0,
+                fraud_rings_detected: currentResult.summary?.fraud_rings_detected || 0,
+                processing_time_seconds: currentResult.summary?.processing_time_seconds || 0
+            }
+        };
+
+        // Add suspicious accounts (sorted by score descending)
+        if (currentResult.accounts) {
+            const suspiciousAccounts = Object.values(currentResult.accounts)
+                .filter(acc => acc.suspicionScore > 50)
+                .sort((a, b) => b.suspicionScore - a.suspicionScore);
+
+            suspiciousAccounts.forEach(acc => {
+                jsonOutput.suspicious_accounts.push({
+                    account_id: acc.accountId,
+                    suspicion_score: parseFloat(acc.suspicionScore.toFixed(1)),
+                    detected_patterns: acc.patterns || [],
+                    ring_id: acc.ringId || ""
+                });
+            });
+        }
+
+        // Add fraud rings
+        if (currentResult.fraud_rings) {
+            currentResult.fraud_rings.forEach(ring => {
+                jsonOutput.fraud_rings.push({
+                    ring_id: ring.ring_id,
+                    member_accounts: ring.member_accounts || [],
+                    pattern_type: ring.pattern_type,
+                    risk_score: parseFloat(ring.risk_score.toFixed(1))
+                });
+            });
+        } else if (currentResult.rings) {
+            Object.values(currentResult.rings).forEach(ring => {
+                jsonOutput.fraud_rings.push({
+                    ring_id: ring.ringId,
+                    member_accounts: ring.memberAccounts || [],
+                    pattern_type: ring.patternType,
+                    risk_score: parseFloat(ring.riskScore.toFixed(1))
+                });
+            });
+        }
+
+        // Download JSON
+        const jsonStr = JSON.stringify(jsonOutput, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `money-muling-report-${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+        a.click();
+
+        showNotification('✅ JSON report downloaded successfully');
+    }
+
+    // ===== 23. EXPORT GRAPH AS PNG =====
+    function exportGraphAsPNG() {
+        const canvas = document.querySelector('#network canvas');
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = 'transaction-graph.png';
+            link.href = canvas.toDataURL();
+            link.click();
+            showNotification('✅ Graph exported as PNG');
+        } else {
+            showNotification('❌ Graph not found', 'error');
+        }
+    }
 </script>
 </body>
 </html>
