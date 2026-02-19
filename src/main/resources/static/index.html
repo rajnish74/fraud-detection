@@ -963,6 +963,9 @@
     // Global variable for current result
     let currentResult = null;
 
+    // Base API URL - UPDATED FOR RENDER DEPLOYMENT
+    const API_BASE_URL = 'https://fraud-detection-j20e.onrender.com';
+
     // ===== 1. INITIALIZATION =====
     document.addEventListener('DOMContentLoaded', function() {
         initializeEventListeners();
@@ -1035,7 +1038,7 @@
         }
     }
 
-    // ===== 4. UPLOAD FUNCTION =====
+    // ===== 4. UPLOAD FUNCTION - UPDATED URL =====
     async function uploadFile(file) {
         const formData = new FormData();
         formData.append('file', file);
@@ -1046,7 +1049,7 @@
         document.getElementById('loadingProgress').innerHTML = 'Running Ensemble Learning models on ' + file.name;
 
         try {
-            const response = await fetch('http://localhost:8080/api/upload', {
+            const response = await fetch(`${API_BASE_URL}/api/upload`, {
                 method: 'POST',
                 body: formData
             });
@@ -1821,9 +1824,9 @@
         setTimeout(() => notif.remove(), 3000);
     }
 
-    // ===== 19. CHECK SERVER HEALTH =====
+    // ===== 19. CHECK SERVER HEALTH - UPDATED URL =====
     function checkServerHealth() {
-        fetch('http://localhost:8080/api/health')
+        fetch(`${API_BASE_URL}/api/health`)
             .then(response => response.json())
             .then(data => {
                 updateStatus('🟢 LIVE • SERVER CONNECTED');
